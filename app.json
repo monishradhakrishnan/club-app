@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Campus Ecosystem",
+    "slug": "campus-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F6F5F1"
+    },
+    "android": {
+      "package": "com.campus.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.campus.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
