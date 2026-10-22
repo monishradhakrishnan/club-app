@@ -37,11 +37,11 @@ export const generateOtp = (clubId, title) =>
 export const closeSession = (sessionId) =>
   client.patch(`/api/attendance/sessions/${sessionId}/close`).then((r) => r.data);
 
-export const verifyOtp = (sessionId, otp) =>
-  client.post("/api/attendance/verify", { sessionId, otp }).then((r) => r.data);
-
+export const verifyOtp = (otp) =>
+  client.post("/api/attendance/verify", { otp }).then((r) => r.data);
 export const sessionRecords = (sessionId) =>
   client.get(`/api/attendance/sessions/${sessionId}/records`).then((r) => r.data);
 
 export const sessionsForClub = (clubId) =>
   client.get(`/api/attendance/club/${clubId}/sessions`).then((r) => r.data);
+   

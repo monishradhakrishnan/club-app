@@ -96,18 +96,27 @@ function StaffAttendance() {
 }
 
 function StudentAttendance() {
-  const [sessionId, setSessionId] = useState("");
   const [otp, setOtp] = useState("");
   const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleVerify = async () => {
+    if (otp.length < 4 || loading) return;
     setStatus(null);
+    setLoading(true);
     try {
-      await api.verifyOtp(Number(sessionId), otp);
-      setStatus({ type: "success", text: "You're marked present. ✅" });
+      const rec = await api.verifyOtp(otp);
+      const clubName = rec?.session?.club?.name;
+      const title = rec?.session?.title;
+      setStatus({
+        type: "success",
+        text: `You're marked present${clubName ? ` for ${clubName}` : ""}${title ? ` — ${title}` : ""}. ✅`,
+      });
       setOtp("");
     } catch (err) {
       setStatus({ type: "error", text: err.response?.data?.error || "Could not verify OTP." });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,14 +124,24 @@ function StudentAttendance() {
     <View style={styles.formCard}>
       <Text style={styles.formLabel}>Mark attendance</Text>
       <Text style={{ color: "#1C232199", fontSize: 13, marginBottom: 10 }}>
-        Ask your staff coordinator for the session ID and OTP shown on screen.
+        Enter the OTP shown on your coordinator's screen.
       </Text>
-      <TextInput style={styles.input} placeholder="Session ID" keyboardType="number-pad"
-        value={sessionId} onChangeText={setSessionId} />
-      <TextInput style={[styles.input, styles.otpInput]} placeholder="Enter OTP" keyboardType="number-pad"
-        value={otp} onChangeText={setOtp} maxLength={6} />
-      <TouchableOpacity style={styles.submitBtn} onPress={handleVerify}>
-        <Text style={styles.submitBtnText}>Verify & mark present</Text>
+      <TextInput
+        style={[styles.input, styles.otpInput]}
+        placeholder="------"
+        keyboardType="number-pad"
+        value={otp}
+        onChangeText={(t) => setOtp(t.replace(/\D/g, ""))}
+        maxLength={6}
+        autoFocus
+        onSubmitEditing={handleVerify}
+      />
+      <TouchableOpacity
+        style={[styles.submitBtn, (otp.length < 4 || loading) && { opacity: 0.5 }]}
+        onPress={handleVerify}
+        disabled={otp.length < 4 || loading}
+      >
+        <Text style={styles.submitBtnText}>{loading ? "Verifying..." : "Verify & mark present"}</Text>
       </TouchableOpacity>
       {status && (
         <Text style={{ marginTop: 8, color: status.type === "success" ? "#3E5C50" : "#A64B3F" }}>

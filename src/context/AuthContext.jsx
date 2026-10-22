@@ -36,10 +36,8 @@ export function AuthProvider({ children }) {
 
   const register = async (payload) => {
     const data = await api.register(payload);
-    await AsyncStorage.setItem("accessToken", data.accessToken);
-    await AsyncStorage.setItem("refreshToken", data.refreshToken);
-    setUser(data.user);
-    return data.user;
+    console.log("register response:", data);
+    return data;
   };
 
   const logout = async () => {

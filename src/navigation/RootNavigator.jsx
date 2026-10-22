@@ -8,12 +8,17 @@ import { useAuth } from "../context/AuthContext";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import HomeScreen from "../screens/HomeScreen";
+import ClubProfileScreen from "../screens/ClubProfileScreen";
+import ClubManageScreen from "../screens/ClubManageScreen";
+import CreateEventScreen from "../screens/CreateEventScreen";
 import ClubsScreen from "../screens/ClubsScreen";
 import BudgetScreen from "../screens/BudgetScreen";
 import AttendanceScreen from "../screens/AttendanceScreen";
+import AdminScreen from "../screens/AdminScreen";
 
 const AuthStack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
+const HomeStack = createNativeStackNavigator();
 
 function AuthNavigator() {
   return (
@@ -33,15 +38,43 @@ function LogoutButton() {
   );
 }
 
-// Maps each tab's route name to an Ionicons icon name.
+// Home is its own stack so tapping a club box can push a detail screen
+// (club profile for students, club management + create event for staff)
+// while the bottom tab bar stays visible.
+function HomeStackScreen() {
+  return (
+    <HomeStack.Navigator screenOptions={{ headerRight: () => <LogoutButton /> }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} options={{ title: "Home" }} />
+      <HomeStack.Screen
+        name="ClubProfile"
+        component={ClubProfileScreen}
+        options={({ route }) => ({ title: route.params?.clubName || "Club" })}
+      />
+      <HomeStack.Screen
+        name="ClubManage"
+        component={ClubManageScreen}
+        options={({ route }) => ({ title: route.params?.clubName || "Club" })}
+      />
+      <HomeStack.Screen
+        name="CreateEvent"
+        component={CreateEventScreen}
+        options={{ title: "Create event" }}
+      />
+    </HomeStack.Navigator>
+  );
+}
+
 const TAB_ICONS = {
   Home: "home-outline",
   Clubs: "people-outline",
   Budget: "cash-outline",
   Attendance: "qr-code-outline",
+  Admin: "shield-checkmark-outline",
 };
 
 function MainNavigator() {
+  const { user } = useAuth();
+
   return (
     <Tabs.Navigator
       backBehavior="initialRoute"
@@ -54,10 +87,14 @@ function MainNavigator() {
         ),
       })}
     >
-      <Tabs.Screen name="Home" component={HomeScreen} />
+      {/* Home's own stack renders its own headers, so the outer tab header is hidden here */}
+      <Tabs.Screen name="Home" component={HomeStackScreen} options={{ headerShown: false }} />
       <Tabs.Screen name="Clubs" component={ClubsScreen} />
       <Tabs.Screen name="Budget" component={BudgetScreen} />
       <Tabs.Screen name="Attendance" component={AttendanceScreen} />
+      {user?.role === "ADMIN" && (
+        <Tabs.Screen name="Admin" component={AdminScreen} />
+      )}
     </Tabs.Navigator>
   );
 }
@@ -68,10 +105,18 @@ const linking = {
     screens: {
       Login: "login",
       Register: "register",
-      Home: "",
+      Home: {
+        screens: {
+          HomeMain: "",
+          ClubProfile: "clubs/:clubId/profile",
+          ClubManage: "clubs/:clubId/manage",
+          CreateEvent: "clubs/:clubId/events/new",
+        },
+      },
       Clubs: "clubs",
       Budget: "budget",
       Attendance: "attendance",
+      Admin: "admin",
     },
   },
 };

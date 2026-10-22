@@ -18,13 +18,15 @@ export default function RegisterScreen({ navigation }) {
     setError("");
     setBusy(true);
     try {
-      await register(form);
+      const res = await register(form);
+      navigation.replace("Login", { pendingMessage: res.message });
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed.");
+      setError(err.response?.data?.message || err.response?.data?.error || "Registration failed.");
     } finally {
       setBusy(false);
     }
   };
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
