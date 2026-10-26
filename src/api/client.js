@@ -4,10 +4,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const NATIVE_LAN_IP = '192.168.137.1'; // <-- change this for physical device / Expo Go
 
+
 function resolveBaseUrl() {
   if (Platform.OS === "web" && typeof window !== "undefined") {
-    return `http://${window.location.hostname}:8080`;
+    return "https://club-backend-eucy.onrender.com";
   }
+
+  // Local backend for Expo Go on your physical device
   return `http://${NATIVE_LAN_IP}:8080`;
 }
 
