@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -11,7 +11,10 @@ import {
     Alert,
 } from "react-native";
 
+import { Picker } from "@react-native-picker/picker";
 import { getBudgetRecommendation } from "../api/budgetService";
+import { createBudgetRequest, joinedClubs } from "../api/services";
+import BudgetRequestsPanel from "../components/BudgetRequestsPanel";
 import { useAuth } from "../context/AuthContext";
 
 export default function BudgetScreen() {
@@ -48,6 +51,66 @@ export default function BudgetScreen() {
 
     const [error, setError] = useState("");
 
+    // ---- send recommendation to staff ----
+    const [eventName, setEventName] = useState("");
+    const [clubs, setClubs] = useState([]);
+    const [clubId, setClubId] = useState("");
+    const [sending, setSending] = useState(false);
+    const [sent, setSent] = useState(false);
+    const [sendError, setSendError] = useState("");
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    useEffect(() => {
+        if (user?.role !== "STUDENT") return;
+        joinedClubs()
+            .then((list) => {
+                setClubs(list);
+                if (list.length > 0) setClubId(String(list[0].id));
+            })
+            .catch(() => setClubs([]));
+    }, [user?.role]);
+
+    const sendToStaff = async () => {
+        setSendError("");
+
+        if (!eventName.trim()) {
+            setSendError("Enter the event name (top of the form) before sending.");
+            return;
+        }
+        if (!clubId) {
+            setSendError("Choose a club.");
+            return;
+        }
+        const amount = Number(Number(recommendedBudget).toFixed(2));
+        if (!(amount > 0)) {
+            setSendError("The recommended budget is not valid.");
+            return;
+        }
+
+        setSending(true);
+        try {
+            await createBudgetRequest({
+                clubId: Number(clubId),
+                title: eventName.trim(),
+                purpose:
+                    `AI recommended budget. ${formData.activity_type}, ` +
+                    `${formData.participants_expected} participants, ` +
+                    `${formData.duration_days} day(s), ${formData.venue_type}.`,
+                amount,
+            });
+            setSent(true);
+            setRefreshKey((k) => k + 1);
+        } catch (e) {
+            setSendError(
+                e?.response?.data?.error ||
+                e?.message ||
+                "Could not send to staff."
+            );
+        } finally {
+            setSending(false);
+        }
+    };
+
     const updateField = (field, value) => {
         setFormData((previous) => ({
             ...previous,
@@ -68,6 +131,8 @@ export default function BudgetScreen() {
 
         setError("");
         setRecommendedBudget(null);
+        setSent(false);
+        setSendError("");
 
         // Basic validation
         if (
@@ -190,6 +255,13 @@ export default function BudgetScreen() {
             </Text>
 
 
+            {/* STAFF: budget requests received (approve / reject) */}
+
+            {(user?.role === "STAFF" || user?.role === "ADMIN") && (
+                <BudgetRequestsPanel role={user.role} refreshKey={refreshKey} />
+            )}
+
+
             {/* ACTIVITY INFORMATION */}
 
             <View style={styles.card}>
@@ -197,6 +269,20 @@ export default function BudgetScreen() {
                 <Text style={styles.sectionTitle}>
                     Activity Information
                 </Text>
+
+
+                {/* Event Name (sent to staff together with the budget) */}
+
+                <Text style={styles.label}>
+                    Event Name
+                </Text>
+
+                <TextInput
+                    style={styles.input}
+                    placeholder="Example: Web Development Workshop"
+                    value={eventName}
+                    onChangeText={setEventName}
+                />
 
 
                 {/* Activity Type */}
@@ -617,8 +703,79 @@ export default function BudgetScreen() {
 
                     </TouchableOpacity>
 
+
+                    {/* Send to staff (students) */}
+
+                    {user?.role === "STUDENT" && (
+
+                        <View style={styles.sendBox}>
+
+                            <Text style={styles.sendLabel}>
+                                Send this budget to your club staff
+                            </Text>
+
+                            {clubs.length === 0 ? (
+
+                                <Text style={styles.sendHint}>
+                                    Join a club to send a budget request to its staff.
+                                </Text>
+
+                            ) : (
+
+                                <>
+                                    <View style={styles.pickerWrap}>
+                                        <Picker
+                                            selectedValue={clubId}
+                                            onValueChange={setClubId}
+                                            enabled={!sent}
+                                        >
+                                            {clubs.map((c) => (
+                                                <Picker.Item
+                                                    key={c.id}
+                                                    label={c.name}
+                                                    value={String(c.id)}
+                                                />
+                                            ))}
+                                        </Picker>
+                                    </View>
+
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.sendButton,
+                                            (sending || sent) && styles.disabledButton,
+                                        ]}
+                                        onPress={sendToStaff}
+                                        disabled={sending || sent}
+                                    >
+                                        {sending ? (
+                                            <ActivityIndicator color="#FFFFFF" />
+                                        ) : (
+                                            <Text style={styles.useButtonText}>
+                                                {sent ? "Sent to staff \u2713" : "Send to staff"}
+                                            </Text>
+                                        )}
+                                    </TouchableOpacity>
+                                </>
+
+                            )}
+
+                            {!!sendError && (
+                                <Text style={styles.sendError}>{sendError}</Text>
+                            )}
+
+                        </View>
+
+                    )}
+
                 </View>
 
+            )}
+
+
+            {/* STUDENT: my budget requests and their status */}
+
+            {user?.role === "STUDENT" && (
+                <BudgetRequestsPanel role="STUDENT" refreshKey={refreshKey} />
             )}
 
         </ScrollView>
@@ -835,6 +992,50 @@ const styles = StyleSheet.create({
         textAlign: "center",
         lineHeight: 19,
         marginBottom: 18,
+    },
+
+    sendBox: {
+        width: "100%",
+        marginTop: 18,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: "#B9DCC5",
+    },
+
+    sendLabel: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#1C2321",
+        marginBottom: 10,
+        textAlign: "center",
+    },
+
+    sendHint: {
+        fontSize: 13,
+        color: "#555",
+        textAlign: "center",
+    },
+
+    pickerWrap: {
+        borderWidth: 1,
+        borderColor: "#D9D7CF",
+        borderRadius: 10,
+        backgroundColor: "#FFFFFF",
+        marginBottom: 12,
+    },
+
+    sendButton: {
+        backgroundColor: "#1E6B43",
+        paddingVertical: 13,
+        borderRadius: 8,
+        alignItems: "center",
+    },
+
+    sendError: {
+        color: "#B42318",
+        fontSize: 13,
+        marginTop: 10,
+        textAlign: "center",
     },
 
     useButton: {

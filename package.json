@@ -19,6 +19,8 @@
     "axios": "^1.7.2",
     "babel-preset-expo": "~54.0.10",
     "expo": "^54.0.37",
+    "expo-document-picker": "~14.0.8",
+    "expo-sharing": "~14.0.8",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",

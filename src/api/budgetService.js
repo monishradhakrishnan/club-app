@@ -1,4 +1,8 @@
-const API_URL = "http://localhost:8080";
+// Same address the rest of the app uses (web: this host, phone/Expo Go: the LAN IP in client.js).
+// "localhost" only works in a browser on the same PC - on a phone it points at the phone itself.
+import { BASE_URL } from "./client";
+
+const API_URL = BASE_URL;
 
 export async function getBudgetRecommendation(data, token) {
     try {

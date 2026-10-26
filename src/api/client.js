@@ -2,7 +2,7 @@ import axios from "axios";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const NATIVE_LAN_IP = '10.130.23.93'; // <-- change this for physical device / Expo Go
+const NATIVE_LAN_IP = '192.168.137.1'; // <-- change this for physical device / Expo Go
 
 function resolveBaseUrl() {
   if (Platform.OS === "web" && typeof window !== "undefined") {

@@ -45,3 +45,8 @@ export const sessionRecords = (sessionId) =>
 export const sessionsForClub = (clubId) =>
   client.get(`/api/attendance/club/${clubId}/sessions`).then((r) => r.data);
    
+
+// ---- Budget screen: send recommendation to staff / staff inbox ----
+export const budgetInbox = () => client.get("/api/budget-requests/inbox").then((r) => r.data);
+
+export const joinedClubs = () => client.get("/api/clubs/joined").then((r) => r.data);

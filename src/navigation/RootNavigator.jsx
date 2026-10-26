@@ -14,6 +14,7 @@ import CreateEventScreen from "../screens/CreateEventScreen";
 import ClubsScreen from "../screens/ClubsScreen";
 import BudgetScreen from "../screens/BudgetScreen";
 import AttendanceScreen from "../screens/AttendanceScreen";
+import BillsScreen from "../screens/BillsScreen";
 import AdminScreen from "../screens/AdminScreen";
 
 const AuthStack = createNativeStackNavigator();
@@ -69,6 +70,7 @@ const TAB_ICONS = {
   Clubs: "people-outline",
   Budget: "cash-outline",
   Attendance: "qr-code-outline",
+  Bills: "receipt-outline",
   Admin: "shield-checkmark-outline",
 };
 
@@ -92,6 +94,7 @@ function MainNavigator() {
       <Tabs.Screen name="Clubs" component={ClubsScreen} />
       <Tabs.Screen name="Budget" component={BudgetScreen} />
       <Tabs.Screen name="Attendance" component={AttendanceScreen} />
+      <Tabs.Screen name="Bills" component={BillsScreen} />
       {user?.role === "ADMIN" && (
         <Tabs.Screen name="Admin" component={AdminScreen} />
       )}
@@ -116,6 +119,7 @@ const linking = {
       Clubs: "clubs",
       Budget: "budget",
       Attendance: "attendance",
+      Bills: "bills",
       Admin: "admin",
     },
   },
